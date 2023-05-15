@@ -1,0 +1,86 @@
+import networkx as nx
+import matplotlib.pyplot as plt
+import pygraphviz as pgv
+
+class Person:
+    def init(self, name, age):
+        self.name = name
+        self.age = age
+        self.children = []
+
+    def add_child(self, child):
+        self.children.append(child)
+
+    def repr(self):
+        return self.name
+
+def build_family_tree(person):
+    G = nx.DiGraph()
+    queue = [person]
+    while queue:
+        current_person = queue.pop(0)
+        for child in current_person.children:
+            G.add_edge(current_person, child)
+            queue.append(child)
+    return G
+
+def draw_family_tree(person, image_styles=None):
+    G = build_family_tree(person)
+    pos = nx.nx_agraph.graphviz_layout(G, prog='dot')
+    
+    # Create a PyGraphviz graph from the NetworkX graph
+    graph = nx.nx_agraph.to_agraph(G)
+    
+    # Set default node style
+    default_node_style = {
+        'shape': 'none',
+        'image': 'tree_images/default.png',
+        'fixedsize': 'true',
+        'width': '0.4',
+        'height': '0.4',
+        'imagescale': 'true',
+        'label': '',
+    }
+    
+    # Update node styles if provided
+    if image_styles:
+        for node, style in image_styles.items():
+            if node in graph.nodes():
+                node = graph.get_node(node)
+                node.attr.update(style)
+    
+    # Draw the graph with custom styles
+    graph.layout(prog='dot')
+    graph.draw('family_tree.png')
+    
+    # Show the image
+    img = plt.imread('family_tree.png')
+    plt.imshow(img)
+    plt.axis('off')
+    plt.show()
+
+# Example usage
+# Create person objects
+alice = Person("Alice", 80)
+bob = Person("Bob", 85)
+carol = Person("Carol", 55)
+dave = Person("Dave", 30)
+eve = Person("Eve", 28)
+
+# Build family tree relationships
+alice.add_child(bob)
+bob.add_child(carol)
+carol.add_child(dave)
+carol.add_child(eve)
+
+# Define image styles for specific nodes
+image_styles = {
+    "Alice": {'image': 'tree_images/grandma.png'},
+    "Bob": {'image': 'tree_images/grandpa.png'},
+    "Carol": {'image': 'tree_images/mother.png'},
+    "Dave": {'image': 'tree_images/son.png'},
+    "Eve": {'image': 'tree_images/daughter.png'}
+}
+
+# Draw the family tree with custom image styles
+draw_family_tree(alice, image_styles)
